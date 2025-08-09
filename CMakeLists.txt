@@ -62,6 +62,12 @@ endif()
 message(STATUS "dotnet version ${DOTNET_VERSION} detected, proceeding...")
 
 # Build actions
+add_custom_target(fuzr_core_init
+    COMMAND ${DOTNET_EXECUTABLE} msbuild -t:GenerateCustomProperties
+    WORKING_DIRECTORY ${FUZR_CORE_PATH}
+    COMMENT "Generating custom properties"
+)
+
 add_custom_target(fuzr_build
     COMMAND ${DOTNET_EXECUTABLE} build -c Release --artifacts-path ${FUZR_BUILD_ARTIFACT_PATH} --output ${FUZR_BUILD_OUTPUT_PATH}
     WORKING_DIRECTORY ${FUZR_BUILD_PATH}
@@ -83,8 +89,8 @@ add_custom_target(build_fuzr_core
 )
 
 # Build steps
+add_dependencies(fuzr_build fuzr_core_init)
 add_dependencies(run_fuzr_build fuzr_build)
-
 add_dependencies(build_fuzr_core run_fuzr_build)
 
 add_custom_target(build_all
