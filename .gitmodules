@@ -1,0 +1,3 @@
+[submodule "Fuzr.Core"]
+	path = Fuzr.Core
+	url = git@github.com:Fuzr-Project/Fuzr.Core.git
