@@ -17,7 +17,11 @@ set(TEMP_DIR "${CMAKE_BINARY_DIR}/CMakeTmp")
 set(FUZR_BUILD_ARTIFACT_PATH "${TEMP_DIR}/Fuzr.Build/build")
 set(FUZR_BUILD_OUTPUT_PATH "${TEMP_DIR}/Fuzr.Build")
 set(FUZR_CORE_ARTIFACT_PATH "${TEMP_DIR}/Fuzr.Core/build")
-set(FUZR_CORE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
+
+# Architecture settings
+set(TargetArch "osx-arm64" CACHE STRING "Target architecture for build (osx-arm64, linux-x64, win-x64)")
+set_property(CACHE TargetArch PROPERTY STRINGS osx-arm64 linux-x64 win-x64)
+set(FUZR_CORE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/${TargetArch}")
 # === End User Configurable Settings ===
 
 # Clone if missing
@@ -61,39 +65,57 @@ endif()
 
 message(STATUS "dotnet version ${DOTNET_VERSION} detected, proceeding...")
 
-# Build actions
-add_custom_target(fuzr_core_init
-    COMMAND ${DOTNET_EXECUTABLE} msbuild -t:GenerateCustomProperties
-    WORKING_DIRECTORY ${FUZR_CORE_PATH}
-    COMMENT "Generating custom properties"
-)
+# Function to create architecture-specific builds
+function(add_architecture_target arch)
+    set(output_path "${CMAKE_SOURCE_DIR}/bin/${arch}")
+    
+    add_custom_target(fuzr_core_init_${arch}
+        COMMAND ${DOTNET_EXECUTABLE} msbuild -t:GenerateCustomProperties
+        WORKING_DIRECTORY ${FUZR_CORE_PATH}
+        COMMENT "Generating custom properties for ${arch}"
+    )
 
-add_custom_target(fuzr_build
-    COMMAND ${DOTNET_EXECUTABLE} build -c Release --artifacts-path ${FUZR_BUILD_ARTIFACT_PATH} --output ${FUZR_BUILD_OUTPUT_PATH}
-    WORKING_DIRECTORY ${FUZR_BUILD_PATH}
-    COMMENT "Compiling Fuzr.Build"
-)
+    add_custom_target(fuzr_build_${arch}
+        COMMAND ${DOTNET_EXECUTABLE} build -c Release --artifacts-path ${FUZR_BUILD_ARTIFACT_PATH} --output ${FUZR_BUILD_OUTPUT_PATH}
+        WORKING_DIRECTORY ${FUZR_BUILD_PATH}
+        COMMENT "Compiling Fuzr.Build for ${arch}"
+    )
 
-add_custom_target(run_fuzr_build
-    COMMAND ${CMAKE_COMMAND} -E rm -rf ${FUZR_CORE_APPS_PATH}
-    COMMAND ${FUZR_BUILD_OUTPUT_PATH}/Fuzr.Build ${FUZR_BUILD_ARGS}
-    DEPENDS fuzr_build
-    WORKING_DIRECTORY ${FUZR_BUILD_OUTPUT_PATH}
-    COMMENT "Compiling scripts"
-)
+    add_custom_target(run_fuzr_build_${arch}
+        COMMAND ${CMAKE_COMMAND} -E rm -rf ${FUZR_CORE_APPS_PATH}
+        COMMAND ${FUZR_BUILD_OUTPUT_PATH}/Fuzr.Build ${FUZR_BUILD_ARGS}
+        DEPENDS fuzr_build_${arch}
+        WORKING_DIRECTORY ${FUZR_BUILD_OUTPUT_PATH}
+        COMMENT "Compiling scripts for ${arch}"
+    )
 
-add_custom_target(build_fuzr_core
-    COMMAND ${DOTNET_EXECUTABLE} publish -c Release /p:AssemblyName=${FUZR_ASSEMBLY_NAME} /p:ScriptsVersion=${SCRIPTS_VERSION} /p:DebugType=None /p:CopyOutputSymbolsToPublishDirectory=false --artifacts-path ${FUZR_CORE_ARTIFACT_PATH} --output ${FUZR_CORE_OUTPUT_PATH}
-    WORKING_DIRECTORY ${FUZR_CORE_PATH}
-    COMMENT "Compiling Fuzr.Core"
-)
+    add_custom_target(build_fuzr_core_${arch}
+        COMMAND ${DOTNET_EXECUTABLE} publish -c Release /p:AssemblyName=${FUZR_ASSEMBLY_NAME} /p:ScriptsVersion=${SCRIPTS_VERSION} /p:DebugType=None /p:CopyOutputSymbolsToPublishDirectory=false --artifacts-path ${FUZR_CORE_ARTIFACT_PATH} --output ${output_path} --runtime ${arch}
+        WORKING_DIRECTORY ${FUZR_CORE_PATH}
+        COMMENT "Compiling Fuzr.Core for ${arch}"
+    )
 
-# Build steps
-add_dependencies(fuzr_build fuzr_core_init)
-add_dependencies(run_fuzr_build fuzr_build)
-add_dependencies(build_fuzr_core run_fuzr_build)
+    add_dependencies(fuzr_build_${arch} fuzr_core_init_${arch})
+    add_dependencies(run_fuzr_build_${arch} fuzr_build_${arch})
+    add_dependencies(build_fuzr_core_${arch} run_fuzr_build_${arch})
+endfunction()
 
+# Create targets for all architectures
+set(ARCHITECTURES osx-arm64 linux-x64 win-x64)
+foreach(arch IN LISTS ARCHITECTURES)
+    add_architecture_target(${arch})
+endforeach()
+
+# Default build target (builds all architectures)
 add_custom_target(build_all
     ALL
-    DEPENDS build_fuzr_core
+    DEPENDS build_fuzr_core_osx-arm64 build_fuzr_core_linux-x64 build_fuzr_core_win-x64
+    COMMENT "Building for all architectures: osx-arm64, linux-x64, win-x64"
+)
+
+# Single architecture build target (builds only the selected architecture)
+add_custom_target(build_single
+    ALL
+    DEPENDS build_fuzr_core_${TargetArch}
+    COMMENT "Building for selected architecture: ${TargetArch}"
 )
