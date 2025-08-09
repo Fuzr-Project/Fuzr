@@ -1,10 +1,10 @@
-name: Example Build Script
+name: Build and Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v1.0.0)
+  workflow_dispatch:  # Allow manual triggers
 
 jobs:
   build:
@@ -27,3 +27,39 @@ jobs:
 
     - name: Build
       run: cmake --build build
+
+    - name: Archive binaries
+      run: |
+        mkdir -p artifacts
+        # Copy each architecture folder separately
+        for arch in $(ls bin); do
+          tar -czvf artifacts/${arch}.tar.gz -C bin/${arch} .
+        done
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries
+        path: artifacts/
+        if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: binaries
+        path: release-binaries
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release-binaries/*.tar.gz
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
