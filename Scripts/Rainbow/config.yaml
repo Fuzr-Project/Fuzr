@@ -1,0 +1,8 @@
+name: rainbow
+version: 1.0.0
+categories:
+  - fun
+  - text manipulation
+shortDescription: shortDescription
+fullDescription: fullDescription
+helpText: helpText
