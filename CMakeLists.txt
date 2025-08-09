@@ -12,7 +12,7 @@ set(FUZR_CORE_PATH "${CMAKE_SOURCE_DIR}/Fuzr.Core/Fuzr.Core")
 set(FUZR_CORE_APPS_PATH "${FUZR_CORE_PATH}/apps")
 set(FUZR_BUILD_ARGS "--output" ${FUZR_CORE_APPS_PATH} "--apps-path" "${SCRIPTS_PATH_1}")
 #set(FUZR_BUILD_ARGS "--output" ${FUZR_CORE_APPS_PATH} "--apps-path" "${SCRIPTS_PATH_1}" "--apps-path" "${SCRIPTS_PATH_2}") # Example multiple scripts folder
-set(FUZR_CORE_REPO "https://github.com/example/Fuzr.Core.git")
+set(FUZR_CORE_REPO "https://github.com/Fuzr-Project/Fuzr.Core.git")
 set(TEMP_DIR "${CMAKE_BINARY_DIR}/CMakeTmp")
 set(FUZR_BUILD_ARTIFACT_PATH "${TEMP_DIR}/Fuzr.Build/build")
 set(FUZR_BUILD_OUTPUT_PATH "${TEMP_DIR}/Fuzr.Build")
