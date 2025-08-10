@@ -1,6 +1,6 @@
 # ✨ What is Fuzr?
 
-**Fuzr** is a wrapper, collection, or container (call it whatever you like) for **.NET 10 file-based apps**.  
+**Fuzr** (pronounced *fuser*) is a wrapper, collection, or container (call it whatever you like) for **.NET 10 file-based apps**.  
 
 If you haven’t heard yet, starting from .NET 10, Microsoft introduced **file-based apps** — also known as scripting mode.  
 This means you can execute a single `.cs` file without needing a `.csproj` or any other project structure.  
