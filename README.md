@@ -21,7 +21,7 @@ You can also modify `CMakeLists.txt` to change the assembly name, version, and o
 
 ---
 
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-MIT--0-green)
 ![.NET](https://img.shields.io/badge/.NET-10+-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
